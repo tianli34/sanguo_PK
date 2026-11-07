@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="由真实战斗引擎驱动的三国武将马战可视化模拟器">
+  <title>三国 · 马战单挑</title>
+  <link rel="stylesheet" href="/styles.css?v=7">
+  <script src="/app.js?v=7" defer></script>
+</head>
+<body>
+  <div id="loading" class="loading-screen">
+    <div class="loading-seal">战</div>
+    <p>正在整军列阵…</p>
+  </div>
+
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-seal">三国</span>
+        <div>
+          <h1>马战单挑</h1>
+          <p>铁骑相逢 · 一骑当千</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="seed-label" class="seed-label">战报准备中</span>
+        <button id="export-button" class="text-button" type="button" disabled>导出 JSON</button>
+        <button id="setup-button" class="primary-small" type="button">新的对决</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="duel-hud" aria-label="双方状态">
+        <article id="panel-a" class="player-panel player-a">
+          <div class="portrait"><span id="avatar-a">马</span><i></i></div>
+          <div class="player-data">
+            <div class="player-heading">
+              <div><span class="team-tag">蓝军</span><h2 id="name-a">马超</h2></div>
+              <span id="courage-a" class="courage">胆气 94</span>
+            </div>
+            <div class="stat-row hp-row">
+              <span>HP</span><div class="bar"><i id="hp-bar-a"></i></div><b id="hp-a">—</b>
+            </div>
+            <div class="stat-row sp-row">
+              <span>SP</span><div class="bar"><i id="sp-bar-a"></i></div><b id="sp-a">—</b>
+            </div>
+          </div>
+        </article>
+
+        <div class="versus-block">
+          <span id="round-label">第 1 回合</span>
+          <strong>VS</strong>
+          <small id="tick-label">模拟待启动</small>
+        </div>
+
+        <article id="panel-b" class="player-panel player-b">
+          <div class="player-data">
+            <div class="player-heading">
+              <div><span class="team-tag">赤军</span><h2 id="name-b">许褚</h2></div>
+              <span id="courage-b" class="courage">胆气 96</span>
+            </div>
+            <div class="stat-row hp-row">
+              <span>HP</span><div class="bar"><i id="hp-bar-b"></i></div><b id="hp-b">—</b>
+            </div>
+            <div class="stat-row sp-row">
+              <span>SP</span><div class="bar"><i id="sp-bar-b"></i></div><b id="sp-b">—</b>
+            </div>
+          </div>
+          <div class="portrait"><span id="avatar-b">许</span><i></i></div>
+        </article>
+      </section>
+
+      <section class="lead-strip" aria-label="双方 HP 与 SP 领先幅度">
+        <div id="lead-chip-hp" class="lead-chip lead-even">
+          <span class="lead-key">HP 领先</span>
+          <b id="lead-hp">—</b>
+          <span id="lead-detail-hp" class="lead-detail">— : —</span>
+        </div>
+        <div id="lead-chip-sp" class="lead-chip lead-even">
+          <span class="lead-key">SP 领先</span>
+          <b id="lead-sp">—</b>
+          <span id="lead-detail-sp" class="lead-detail">— : —</span>
+        </div>
+      </section>
+
+      <section class="battle-layout">
+        <div class="stage-column">
+          <div id="battlefield" class="battlefield" aria-label="骑马武将交战动画区域">
+            <div class="sky-glow"></div>
+            <div class="cloud cloud-one"></div>
+            <div class="cloud cloud-two"></div>
+            <div class="mountains mountains-back"></div>
+            <div class="mountains mountains-front"></div>
+            <div class="watchtower"><i></i><i></i><i></i></div>
+            <div class="battle-flag flag-left"><span>汉</span></div>
+            <div class="battle-flag flag-right"><span>威</span></div>
+            <div class="ground-lines"></div>
+            <div class="dust dust-one"></div>
+            <div class="dust dust-two"></div>
+
+            <div class="action-banner">
+              <span class="action-dot"></span>
+              <strong id="action-text">双方策马入场</strong>
+            </div>
+
+            <div id="combatant-a" class="combatant combatant-a">
+              <div class="float-layer" id="float-a"></div>
+              <div class="sprite-mount" id="sprite-a"></div>
+              <span class="ground-shadow"></span>
+              <b class="unit-name" id="unit-name-a">马超</b>
+            </div>
+            <div id="combatant-b" class="combatant combatant-b">
+              <div class="float-layer" id="float-b"></div>
+              <div class="sprite-mount flipped" id="sprite-b"></div>
+              <span class="ground-shadow"></span>
+              <b class="unit-name" id="unit-name-b">许褚</b>
+            </div>
+
+            <div id="effect-layer" class="effect-layer"></div>
+
+            <div id="result-overlay" class="result-overlay" hidden>
+              <span>战斗已定</span>
+              <h2 id="result-title">蓝军获胜</h2>
+              <p id="result-detail"></p>
+              <div>
+                <button id="result-replay" type="button">重新播放</button>
+                <button id="result-new" type="button">再来一局</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="playback-bar">
+            <div class="main-controls">
+              <button id="start-button" class="control-primary" type="button" disabled>
+                <span class="play-icon"></span><b>开始</b>
+              </button>
+              <button id="pause-button" type="button" disabled>暂停</button>
+              <button id="back-button" type="button" disabled>上一步</button>
+              <button id="replay-button" type="button" disabled>重播</button>
+              <button id="skip-button" type="button" disabled>跳到结果</button>
+            </div>
+            <div class="speed-controls" aria-label="播放速度">
+              <span>速度</span>
+              <button class="speed-button active" data-speed="1" type="button">1×</button>
+              <button class="speed-button" data-speed="2" type="button">2×</button>
+              <button class="speed-button" data-speed="4" type="button">4×</button>
+            </div>
+          </div>
+          <div id="timeline" class="timeline" role="slider" tabindex="0" aria-label="播放进度，可拖动定位"
+               aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" title="拖动可前后定位（也可用 ← → 键逐条移动）">
+            <i id="timeline-progress"></i>
+            <span id="timeline-knob" class="timeline-knob"></span>
+          </div>
+        </div>
+
+        <aside class="report-panel">
+          <div class="report-heading">
+            <div><span class="live-dot"></span><h2>实时战报</h2></div>
+            <span id="event-count">0 / 0</span>
+          </div>
+          <div id="battle-log" class="battle-log" aria-live="polite">
+            <div class="empty-log">战报将随动作同步展开</div>
+          </div>
+          <div class="report-footnote">动画只演绎引擎结果，不重新判定伤害</div>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>真实引擎驱动</span><i></i><span>事件顺序播放</span><i></i><span>同战报一致重播</span>
+    </footer>
+  </div>
+
+  <dialog id="setup-dialog" class="setup-dialog">
+    <form id="setup-form">
+      <div class="dialog-heading">
+        <div><span>排兵布阵</span><h2>新的对决</h2></div>
+        <button id="close-dialog" class="close-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <p class="dialog-intro">调整武将初始属性。所有伤害与胜负仍由原战斗引擎计算。</p>
+      <div class="setup-grid">
+        <fieldset>
+          <legend>蓝军武将</legend>
+          <label>姓名<input name="a-name" maxlength="12" required value="马超"></label>
+          <div class="attribute-grid">
+            <label>武艺<input name="a-martialarts" type="number" min="1" max="120" value="98" required></label>
+            <label>敏捷<input name="a-agility" type="number" min="1" max="120" value="95" required></label>
+            <label>力量<input name="a-strength" type="number" min="1" max="120" value="92" required></label>
+            <label>胆气<input name="a-courage" type="number" min="1" max="120" value="94" required></label>
+            <label>体力<input name="a-sp" type="number" min="1" max="200" value="98" required></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>赤军武将</legend>
+          <label>姓名<input name="b-name" maxlength="12" required value="许褚"></label>
+          <div class="attribute-grid">
+            <label>武艺<input name="b-martialarts" type="number" min="1" max="120" value="95" required></label>
+            <label>敏捷<input name="b-agility" type="number" min="1" max="120" value="80" required></label>
+            <label>力量<input name="b-strength" type="number" min="1" max="120" value="99" required></label>
+            <label>胆气<input name="b-courage" type="number" min="1" max="120" value="96" required></label>
+            <label>体力<input name="b-sp" type="number" min="1" max="200" value="100" required></label>
+          </div>
+        </fieldset>
+      </div>
+      <label class="seed-input">随机种子 <input name="seed" type="number" value="42" required><small>相同配置与种子可复现同一战报</small></label>
+      <div id="setup-error" class="setup-error" role="alert"></div>
+      <button id="generate-button" class="generate-button" type="submit">生成战报并开战</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+</body>
+</html>
